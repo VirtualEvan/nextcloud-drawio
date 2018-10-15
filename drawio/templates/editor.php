@@ -26,7 +26,7 @@
                 var filePath = "<?php echo urldecode($_['drawioFilePath']); ?>";
                 var originUrl = "<?php p($_['drawioUrl']); ?>";
                 var drawIoUrl = "<?php p($_['drawioUrl']); print_unescaped($frame_params); ?>"
-                OCA.DrawIO.EditFile(iframe.contentWindow, filePath, originUrl);
+                OCA.DrawIO.EditFileWImport(iframe.contentWindow, filePath, originUrl);
                 iframe.setAttribute('src', drawIoUrl );
             <?php } ?>
         });

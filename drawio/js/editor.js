@@ -56,26 +56,58 @@
 
     OCA.DrawIO.EditFile = function (editWindow, filePath, origin) {
         var ncClient = OC.Files.getClient();
+        // Check extension
+        var isXML = filePath.split('.').pop() == 'xml'
+        // Response arraybuffer for non XML files
+        if (isXML) {
+            var responseType = ""
+            var file = filePath
+        } else {
+            var responseType = "arraybuffer"
+            var date = new Date()
+            var datetime =  "Open_" +
+                            date.getDay() + "-" + 
+                            date.getMonth() + "-" + 
+                            date.getFullYear() + "_T" + 
+                            date.getHours() + "." + 
+                            date.getMinutes()
+            var file = filePath + "_" + datetime + ".xml"
+        }
+        
         var receiver = function (evt) {
             if (evt.data.length > 0 && origin.includes(evt.origin)) {
                 var payload = JSON.parse(evt.data);
                 if (payload.event === "init") {
                     var loadMsg = OC.Notification.show(t(OCA.DrawIO.AppName, "Loading, please wait."));
-                    ncClient.getFileContents(filePath)
+                    ncClient.getFileContents(filePath, null, responseType)
                     .then(function (status, contents) {
-                        if (contents === " ") {
-                            editWindow.postMessage(JSON.stringify({
-                                action: "template",
-                                name: filePath
-                            }), "*");
-                        } else if (contents.indexOf("mxGraphModel") !== -1) {
-                            // TODO: show error to user
-                            OCA.DrawIO.Cleanup(receiver, filePath);
+                        if(isXML) {
+                            if (contents === " ") {
+                                editWindow.postMessage(JSON.stringify({
+                                    action: "template",
+                                    name: filePath
+                                }), "*");
+                            } else if (contents.indexOf("mxGraphModel") !== -1) {
+                                // TODO: show error to user
+                                OCA.DrawIO.Cleanup(receiver, filePath);
+                            } else {
+                                editWindow.postMessage(JSON.stringify({
+                                    action: "load",
+                                    xml: contents
+                                }), "*");
+                            }
                         } else {
-                            editWindow.postMessage(JSON.stringify({
-                                action: "load",
-                                xml: contents
-                            }), "*");
+                            blob = new Blob([contents], {type: "application/vnd.visio"})
+
+                            reader = new FileReader();
+                            reader.onloadend = function() {
+                                editWindow.postMessage(JSON.stringify({
+                                    action: "load", 
+                                    title: filePath + ".xml",
+                                    xml: reader.result
+                                }), "*");
+                            }
+                            reader.readAsDataURL(blob);
                         }
                     })
                     .fail(function (status) {
@@ -93,14 +125,14 @@
                 } else if (payload.event === "save") {
                     var saveMsg = OC.Notification.show(t(OCA.DrawIO.AppName, "Saving..."));
                     ncClient.putFileContents(
-                        filePath,
+                        file,
                         payload.xml, {
                             contentType: "x-application/drawio",
                             overwrite: false
                         }
                     )
                     .then(function (status) {
-                        OC.Notification.showTemporary(t(OCA.DrawIO.AppName, "File saved!"));
+                        OC.Notification.showTemporary(t(OCA.DrawIO.AppName, "File saved as " + file));
                     })
                     .fail(function (status) {
                         // TODO: handle on failed write

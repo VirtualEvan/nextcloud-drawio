@@ -124,22 +124,24 @@
 
     OCA.DrawIO.EditFileWImport = function (editWindow, filePath, origin) {
         var ncClient = OC.Files.getClient();
+        var supportedExtension = "drawio"
+
         // Check extension
-        var isXML = filePath.split('.').pop() == 'xml'
+        var isSupportedExt = filePath.split('.').pop() == supportedExtension
         // Response arraybuffer for non XML files
-        if (isXML) {
+        if (isSupportedExt) {
             var responseType = ""
-            var file = filePath
+            var fileToSave = filePath
         } else {
             var responseType = "arraybuffer"
             var date = new Date()
             var datetime =  "Open_" +
-                            date.getDay() + "-" + 
-                            date.getMonth() + "-" + 
+                            date.getDate() + "-" + 
+                            (date.getMonth()+1) + "-" + 
                             date.getFullYear() + "_T" + 
                             date.getHours() + "." + 
                             date.getMinutes()
-            var file = filePath + "_" + datetime + ".xml"
+            var fileToSave = filePath + "_" + datetime + "." + supportedExtension
         }
         
         var receiver = function (evt) {
@@ -149,7 +151,7 @@
                     var loadMsg = OC.Notification.show(t(OCA.DrawIO.AppName, "Loading, please wait."));
                     ncClient.getFileContentsRT(filePath, null, responseType)
                     .then(function (status, contents) {
-                        if(isXML) {
+                        if(isSupportedExt) {
                             if (contents === " ") {
                                 editWindow.postMessage(JSON.stringify({
                                     action: "template",
@@ -171,7 +173,7 @@
                             reader.onloadend = function() {
                                 editWindow.postMessage(JSON.stringify({
                                     action: "load", 
-                                    title: filePath + ".xml",
+                                    title: filePath + "." + supportedExtension,
                                     xml: reader.result
                                 }), "*");
                             }
@@ -193,14 +195,14 @@
                 } else if (payload.event === "save") {
                     var saveMsg = OC.Notification.show(t(OCA.DrawIO.AppName, "Saving..."));
                     ncClient.putFileContents(
-                        file,
+                        fileToSave,
                         payload.xml, {
                             contentType: "x-application/drawio",
                             overwrite: false
                         }
                     )
                     .then(function (status) {
-                        OC.Notification.showTemporary(t(OCA.DrawIO.AppName, "File saved as " + file));
+                        OC.Notification.showTemporary(t(OCA.DrawIO.AppName, "File saved as " + fileToSave));
                     })
                     .fail(function (status) {
                         // TODO: handle on failed write

@@ -135,7 +135,7 @@
         } else {
             var responseType = "arraybuffer"
             var date = new Date()
-            var datetime =  "Open_" +
+            var datetime =  "Opened_" +
                             date.getDate() + "-" + 
                             (date.getMonth()+1) + "-" + 
                             date.getFullYear() + "_T" + 
@@ -173,7 +173,7 @@
                             reader.onloadend = function() {
                                 editWindow.postMessage(JSON.stringify({
                                     action: "load", 
-                                    title: filePath + "." + supportedExtension,
+                                    title: fileToSave,
                                     xml: reader.result
                                 }), "*");
                             }

@@ -10,7 +10,7 @@
     if (!empty($_["drawioTheme"])) $frame_params .= "&ui=".$_["drawioTheme"];
     if (!empty($_["drawioLang"])) $frame_params .= "&lang=".$_["drawioLang"];
     if (!empty($_["drawioUrlArgs"])) $frame_params .= "&".$_["drawioUrlArgs"];
-    $frame_params .= "&spin=1&proto=json";
+    $frame_params .= "&spin=1&proto=json&uid=".$_["uid"];
 ?>
 
 <div id="app-content">
